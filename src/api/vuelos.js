@@ -9,3 +9,19 @@ export function buscarVuelosPorRuta(origen, destino) {
     .get('/api/vuelos/buscar', { params: { origen, destino } })
     .then((res) => res.data)
 }
+
+export function buscarVueloPorId(id) {
+  return apiClient.get(`/api/vuelos/${id}`).then((res) => res.data)
+}
+
+export function crearVuelo(vuelo) {
+  return apiClient.post('/api/vuelos', vuelo).then((res) => res.data)
+}
+
+export function editarVuelo(id, vuelo) {
+  return apiClient.put(`/api/vuelos/${id}`, vuelo).then((res) => res.data)
+}
+
+export function eliminarVuelo(id) {
+  return apiClient.delete(`/api/vuelos/${id}`).then((res) => res.data)
+}

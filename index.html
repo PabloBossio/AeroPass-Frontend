@@ -3,7 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aerolinea API — Frontend</title>
+    <title>AeroPass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!--
+      Anti-flash de tema: antes de que React monte, lee la preferencia
+      guardada (o la del sistema operativo) y aplica la clase "dark" al
+      <html> de una. Sin esto, la página parpadea en claro un instante
+      antes de que ThemeContext la corrija.
+    -->
+    <script>
+      (function () {
+        var guardado = localStorage.getItem('theme')
+        var prefiereOscuro =
+          guardado === 'dark' ||
+          (!guardado && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (prefiereOscuro) document.documentElement.classList.add('dark')
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

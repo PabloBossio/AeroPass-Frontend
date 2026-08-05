@@ -1,143 +1,67 @@
-* {
-  box-sizing: border-box;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-white text-slate-800 font-sans antialiased transition-colors duration-200 dark:bg-navy-950 dark:text-slate-100;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
 }
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: #f5f6fa;
-  color: #1c1f26;
-}
+@layer components {
+  /* Fondo con patrón de puntos sutil, usado en heros/secciones destacadas. */
+  .bg-dots {
+    @apply bg-dots-light bg-dots-pattern dark:bg-dots-dark;
+  }
 
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 24px 16px;
-}
+  /* Botón principal: forma píldora, sistema de diseño acordado. */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3 font-bold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none dark:shadow-blue-500/25 dark:disabled:bg-slate-700;
+  }
 
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #1c1f26;
-  color: white;
-  padding: 12px 24px;
-}
+  /* Botón secundario/outline: mismo pill shape, sin relleno. */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-6 py-3 font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-400 dark:hover:text-blue-400;
+  }
 
-.navbar-brand {
-  color: white;
-  font-weight: bold;
-  text-decoration: none;
-  font-size: 1.1rem;
-}
+  /* Tarjeta base usada en toda la app (vuelos, reservas, formularios, stats). */
+  .card {
+    @apply rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+  }
 
-.navbar-links {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
+  /* Campo de texto estándar. */
+  .input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-blue-900/40;
+  }
 
-.navbar-links a {
-  color: white;
-  text-decoration: none;
-}
-
-.navbar-links a:hover {
-  text-decoration: underline;
-}
-
-.navbar-user {
-  opacity: 0.8;
-  font-size: 0.9rem;
-}
-
-button {
-  cursor: pointer;
-  background: #2f6fed;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-}
-
-button:disabled {
-  background: #9aa5b1;
-  cursor: not-allowed;
-}
-
-.navbar-links button {
-  background: transparent;
-  border: 1px solid white;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-th, td {
-  text-align: left;
-  padding: 10px 12px;
-  border-bottom: 1px solid #eaecef;
-}
-
-th {
-  background: #eef1f7;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  color: #555;
-}
-
-.page {
-  margin-top: 8px;
-}
-
-.page-login form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 320px;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.page-login label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9rem;
-}
-
-input {
-  padding: 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-
-.filtro {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.error {
-  color: #c0392b;
-  background: #fdecea;
-  padding: 8px 12px;
-  border-radius: 6px;
-}
-
-.exito {
-  color: #1e7e34;
-  background: #e6f7e9;
-  padding: 8px 12px;
-  border-radius: 6px;
+  /* Badge/pill de estado (PROGRAMADO, CONFIRMADA, etc.) con variantes por color. */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .badge-blue {
+    @apply bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300;
+  }
+  .badge-green {
+    @apply bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300;
+  }
+  .badge-amber {
+    @apply bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300;
+  }
+  .badge-red {
+    @apply bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300;
+  }
+  .badge-slate {
+    @apply bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300;
+  }
 }

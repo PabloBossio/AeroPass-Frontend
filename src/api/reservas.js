@@ -17,3 +17,8 @@ export function cancelarReserva(id) {
     .put(`/api/reservas/${id}/cancelar`)
     .then((res) => res.data)
 }
+
+// Solo ADMIN: todas las reservas del sistema, de todos los usuarios.
+export function listarTodasLasReservas() {
+  return apiClient.get('/api/reservas').then((res) => res.data)
+}
