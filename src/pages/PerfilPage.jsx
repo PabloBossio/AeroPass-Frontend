@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { listarMisReservas } from '../api/reservas'
+import { obtenerMiPerfil } from '../api/usuarios'
 import Badge from '../components/Badge'
 import { UserIcon } from '../components/icons'
 
@@ -10,6 +11,7 @@ export default function PerfilPage() {
   const navigate = useNavigate()
   const [totalReservas, setTotalReservas] = useState(null)
   const [reservasActivas, setReservasActivas] = useState(null)
+  const [nombre, setNombre] = useState(null)
 
   useEffect(() => {
     listarMisReservas(user.id)
@@ -22,6 +24,12 @@ export default function PerfilPage() {
         setReservasActivas(0)
       })
   }, [user.id])
+
+  useEffect(() => {
+    obtenerMiPerfil()
+      .then((data) => setNombre(data.nombre))
+      .catch(() => setNombre(null))
+  }, [])
 
   function handleLogout() {
     logout()
@@ -41,8 +49,9 @@ export default function PerfilPage() {
           </div>
           <div>
             <div className="font-display text-lg font-bold text-slate-900 dark:text-white">
-              {user.email}
+              {nombre ?? user.email}
             </div>
+            {nombre && <div className="text-sm text-slate-400">{user.email}</div>}
             <div className="mt-1">
               <Badge value={user.rol} />
             </div>
