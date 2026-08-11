@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { listarVuelos, buscarVuelosPorRuta } from '../api/vuelos'
+import { listarVuelos } from '../api/vuelos'
 import { crearReserva } from '../api/reservas'
 import { useAuth } from '../context/AuthContext'
 import Badge from '../components/Badge'
@@ -13,20 +13,48 @@ function formatearFecha(fechaIso) {
   })
 }
 
+const OPCIONES_ESTADO = [
+  { value: '', label: 'Todos los estados' },
+  { value: 'PROGRAMADO', label: 'Programado' },
+  { value: 'EN_VUELO', label: 'En vuelo' },
+  { value: 'DEMORADO', label: 'Demorado' },
+  { value: 'FINALIZADO', label: 'Finalizado' },
+  { value: 'CANCELADO', label: 'Cancelado' },
+]
+
 export default function VuelosPage() {
   const [vuelos, setVuelos] = useState([])
   const [origen, setOrigen] = useState('')
   const [destino, setDestino] = useState('')
+  const [estado, setEstado] = useState('')
+  const [paginaActual, setPaginaActual] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(0)
+  const [totalElementos, setTotalElementos] = useState(0)
+  const [esUltima, setEsUltima] = useState(true)
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState(null)
   const [reservandoId, setReservandoId] = useState(null)
   const { user } = useAuth()
 
-  async function cargarVuelos() {
+  // `filtros` es opcional: por default toma los valores actuales del state
+  // (origen/destino/estado). Se puede pasar explícito cuando necesitamos
+  // cargar con valores que el state todavía no reflejó (ej. "limpiar
+  // filtros", donde el setEstado('') recién se ve reflejado en el próximo
+  // render, pero acá ya necesitamos pedir sin filtros).
+  async function cargarVuelos(pagina = 0, filtros = { origen, destino, estado }) {
     setCargando(true)
     try {
-      const data = await listarVuelos()
-      setVuelos(data)
+      const data = await listarVuelos({
+        page: pagina,
+        origen: filtros.origen || undefined,
+        destino: filtros.destino || undefined,
+        estado: filtros.estado || undefined,
+      })
+      setVuelos(data.contenido)
+      setPaginaActual(data.paginaActual)
+      setTotalPaginas(data.totalPaginas)
+      setTotalElementos(data.totalElementos)
+      setEsUltima(data.esUltima)
     } catch (err) {
       setMensaje({ tipo: 'error', texto: 'No se pudieron cargar los vuelos.' })
     } finally {
@@ -35,24 +63,28 @@ export default function VuelosPage() {
   }
 
   useEffect(() => {
-    cargarVuelos()
+    cargarVuelos(0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleBuscar(e) {
+  function handleBuscar(e) {
     e.preventDefault()
-    if (!origen && !destino) {
-      cargarVuelos()
-      return
-    }
-    setCargando(true)
-    try {
-      const data = await buscarVuelosPorRuta(origen, destino)
-      setVuelos(data)
-    } catch (err) {
-      setMensaje({ tipo: 'error', texto: 'No se pudo buscar por esa ruta.' })
-    } finally {
-      setCargando(false)
-    }
+    cargarVuelos(0)
+  }
+
+  function handleLimpiarFiltros() {
+    setOrigen('')
+    setDestino('')
+    setEstado('')
+    cargarVuelos(0, { origen: '', destino: '', estado: '' })
+  }
+
+  function handlePaginaAnterior() {
+    if (paginaActual > 0) cargarVuelos(paginaActual - 1)
+  }
+
+  function handlePaginaSiguiente() {
+    if (!esUltima) cargarVuelos(paginaActual + 1)
   }
 
   async function handleReservar(vueloId) {
@@ -62,7 +94,7 @@ export default function VuelosPage() {
     try {
       await crearReserva(user.id, vueloId)
       setMensaje({ tipo: 'exito', texto: 'Reserva creada correctamente.' })
-      cargarVuelos()
+      cargarVuelos(paginaActual)
     } catch (err) {
       const status = err.response?.status
       if (status === 400) {
@@ -97,9 +129,25 @@ export default function VuelosPage() {
           value={destino}
           onChange={(e) => setDestino(e.target.value)}
         />
+        <select
+          className="input max-w-[220px]"
+          value={estado}
+          onChange={(e) => setEstado(e.target.value)}
+        >
+          {OPCIONES_ESTADO.map((opcion) => (
+            <option key={opcion.value} value={opcion.value}>
+              {opcion.label}
+            </option>
+          ))}
+        </select>
         <button type="submit" className="btn-primary">
           Buscar
         </button>
+        {(origen || destino || estado) && (
+          <button type="button" onClick={handleLimpiarFiltros} className="btn-outline">
+            Limpiar filtros
+          </button>
+        )}
       </form>
 
       {mensaje && (
@@ -111,6 +159,13 @@ export default function VuelosPage() {
           }`}
         >
           {mensaje.texto}
+        </p>
+      )}
+
+      {!cargando && vuelos.length > 0 && (
+        <p className="mb-4 text-sm text-slate-400">
+          {totalElementos} vuelo{totalElementos === 1 ? '' : 's'} encontrado
+          {totalElementos === 1 ? '' : 's'}
         </p>
       )}
 
@@ -168,6 +223,28 @@ export default function VuelosPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {!cargando && totalPaginas > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <button
+            onClick={handlePaginaAnterior}
+            disabled={paginaActual === 0}
+            className="btn-outline !px-4 !py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Anterior
+          </button>
+          <span className="text-sm text-slate-400">
+            Página {paginaActual + 1} de {totalPaginas}
+          </span>
+          <button
+            onClick={handlePaginaSiguiente}
+            disabled={esUltima}
+            className="btn-outline !px-4 !py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Siguiente
+          </button>
         </div>
       )}
     </div>

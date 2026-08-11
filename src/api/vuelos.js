@@ -1,12 +1,12 @@
 import apiClient from './client'
 
-export function listarVuelos() {
-  return apiClient.get('/api/vuelos').then((res) => res.data)
-}
-
-export function buscarVuelosPorRuta(origen, destino) {
+// El backend ahora pagina y filtra GET /api/vuelos (?page, ?size, ?sort,
+// ?origen, ?destino, ?estado). La respuesta ya no es un array plano sino
+// { contenido, paginaActual, tamanoPagina, totalElementos, totalPaginas, esUltima }.
+// Los filtros que queden en `undefined` no se mandan (axios los omite solos).
+export function listarVuelos({ page = 0, size = 10, sort = 'fechaSalida', origen, destino, estado } = {}) {
   return apiClient
-    .get('/api/vuelos/buscar', { params: { origen, destino } })
+    .get('/api/vuelos', { params: { page, size, sort, origen, destino, estado } })
     .then((res) => res.data)
 }
 

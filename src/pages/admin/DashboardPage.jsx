@@ -37,9 +37,17 @@ export default function DashboardPage() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    Promise.all([listarVuelos(), listarAviones(), listarUsuarios(), listarTodasLasReservas()])
-      .then(([vuelos, aviones, usuarios, reservas]) => {
-        setDatos({ vuelos, aviones, usuarios, reservas })
+    // Mismo criterio que en VuelosAdminPage: GET /api/vuelos pagina, y acá
+    // necesitamos el total para calcular estadísticas agregadas, así que
+    // pedimos una página grande en vez de sumar paginación al dashboard.
+    Promise.all([
+      listarVuelos({ size: 1000 }),
+      listarAviones(),
+      listarUsuarios(),
+      listarTodasLasReservas(),
+    ])
+      .then(([vuelosData, aviones, usuarios, reservas]) => {
+        setDatos({ vuelos: vuelosData.contenido, aviones, usuarios, reservas })
       })
       .catch(() => setError('No se pudieron cargar las estadísticas.'))
   }, [])

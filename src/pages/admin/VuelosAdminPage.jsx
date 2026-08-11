@@ -202,8 +202,17 @@ export default function VuelosAdminPage() {
   async function cargarTodo() {
     setCargando(true)
     try {
-      const [vuelosData, avionesData] = await Promise.all([listarVuelos(), listarAviones()])
-      setVuelos(vuelosData)
+      // GET /api/vuelos ahora pagina (10 por página por default). Para el
+      // panel de admin queremos ver todos los vuelos en una sola tabla, así
+      // que pedimos una página grande en vez de armar paginación acá
+      // también. No es la solución "ideal" (lo correcto sería un endpoint
+      // de agregación aparte), pero resuelve el caso real sin duplicar la
+      // UI de paginación en dos lugares. Documentado en NOTAS.md.
+      const [vuelosData, avionesData] = await Promise.all([
+        listarVuelos({ size: 1000 }),
+        listarAviones(),
+      ])
+      setVuelos(vuelosData.contenido)
       setAviones(avionesData)
     } catch {
       setMensaje({ tipo: 'error', texto: 'No se pudieron cargar los vuelos.' })
