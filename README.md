@@ -1,32 +1,58 @@
-# Aerolinea API — Frontend
+# AeroPass — Frontend
 
-Frontend en React (con Vite) que consume la API de `aerolinea-api`. Cubre el flujo básico: login, ver vuelos disponibles, reservar, y ver/cancelar mis reservas.
+Aplicación web de reservas de vuelos construida con **React**, **Vite** y **Tailwind CSS**, consumiendo una API REST propia desarrollada en Java/Spring Boot y desplegada en producción.
 
-## Cómo correrlo
+## Demo en vivo
 
-1. Asegurate de tener tu backend (`aerolinea-api`) corriendo en `http://localhost:8080`.
-2. Instalá las dependencias:
-   ```
-   npm install
-   ```
-3. Levantá el servidor de desarrollo:
-   ```
-   npm run dev
-   ```
-4. Abrí en el navegador la URL que te muestre la consola (por defecto `http://localhost:5173`).
+🔗 **https://aero-pass-frontend.vercel.app**
 
-## Estructura del proyecto
+Usuario de prueba (rol Administrador):
 
-- `src/api/` — funciones que llaman a la API (una por recurso: `auth.js`, `vuelos.js`, `reservas.js`), todas usando la misma instancia de `axios` configurada en `client.js` (que agrega el token JWT automáticamente a cada request).
-- `src/context/AuthContext.jsx` — guarda quién está logueado (token, email, rol, id) en toda la app, usando el patrón de Context de React. Persiste en `localStorage` para sobrevivir a un refresh de página.
-- `src/components/` — piezas reutilizables: `Navbar` (barra de navegación) y `ProtectedRoute` (bloquea el acceso a una página si no hay usuario logueado).
-- `src/pages/` — una página por ruta: `LoginPage`, `VuelosPage` (página principal), `MisReservasPage`.
-- `src/App.jsx` — define las rutas de la aplicación con `react-router-dom`.
+- **Email:** admin@example.com
+- **Contraseña:** admin12345
 
-## Variables de entorno
+También podés registrarte como usuario nuevo desde la propia app para probar el flujo de reservas del lado de un usuario común.
 
-`.env` define `VITE_API_URL`, la URL base de tu API. Si tu backend corre en otro puerto o hostname, cambiala ahí.
+> **Nota:** el backend corre en la capa gratuita de Render, que "duerme" tras 15 minutos sin uso. Si el primer login tarda entre 30 y 50 segundos, es normal — el servidor se está despertando.
 
-## Nota de seguridad
+## Funcionalidades
 
-El JWT se guarda en `localStorage` por simplicidad (estándar para un proyecto de aprendizaje). En un proyecto de producción con mayores exigencias de seguridad, se prefiere una cookie `httpOnly` (no accesible desde JavaScript), que protege mejor contra el robo de token vía ataques XSS.
+- Registro y login con autenticación JWT.
+- Búsqueda y reserva de vuelos, y gestión de reservas propias.
+- Perfil de usuario con datos reales (nombre, rol, resumen de reservas).
+- Modo claro / oscuro.
+- Panel de administración completo (solo rol ADMIN):
+  - Dashboard con estadísticas (vuelos, aviones, usuarios, reservas, ingresos, ocupación).
+  - CRUD de vuelos y aviones.
+  - Gestión de roles de usuario.
+  - Vista y cancelación de todas las reservas del sistema.
+
+## Stack técnico
+
+- React 18 + Vite
+- React Router v6 (rutas anidadas para el panel admin)
+- Tailwind CSS (sistema de diseño propio, modo oscuro con estrategia `class`)
+- Axios (con interceptor de autenticación)
+- Context API para estado de sesión y tema
+
+## Backend
+
+Este frontend consume la API REST de **AeroPass-Backend**:
+👉 [github.com/PabloBossio/AeroPass-Backend](https://github.com/PabloBossio/AeroPass-Backend)
+
+Java 21, Spring Boot, Spring Security + JWT, JPA/Hibernate, MySQL, más de 90 tests automatizados (JUnit 5 + Mockito), documentación interactiva con Swagger/OpenAPI, y despliegue containerizado con Docker.
+
+## Correrlo en local
+
+```bash
+git clone https://github.com/PabloBossio/AeroPass-Frontend.git
+cd AeroPass-Frontend
+npm install
+npm run dev
+```
+
+Necesita una variable de entorno `VITE_API_URL` apuntando a una instancia del backend (local o la de producción).
+
+## Autor
+
+**Pablo Bossio** — [linkedin.com/in/pablo-bossio-909b27420](https://linkedin.com/in/pablo-bossio-909b27420)
