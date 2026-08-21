@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listarMisReservas, cancelarReserva } from '../api/reservas'
+import { crearSesionDePago } from '../api/pagos'
 import { useAuth } from '../context/AuthContext'
 import Badge from '../components/Badge'
 
@@ -16,6 +17,7 @@ export default function MisReservasPage() {
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState(null)
   const [cancelandoId, setCancelandoId] = useState(null)
+  const [pagandoId, setPagandoId] = useState(null)
   const { user } = useAuth()
 
   async function cargarReservas() {
@@ -53,6 +55,27 @@ export default function MisReservasPage() {
       }
     } finally {
       setCancelandoId(null)
+    }
+  }
+
+  async function handlePagar(id) {
+    setMensaje(null)
+    setPagandoId(id)
+    try {
+      const { url } = await crearSesionDePago(id)
+      // Redirección completa (no navegación de React Router): el checkout
+      // vive en el dominio de Stripe, fuera de la SPA.
+      window.location.href = url
+    } catch (err) {
+      const status = err.response?.status
+      if (status === 400) {
+        setMensaje({ tipo: 'error', texto: 'Esa reserva ya no está pendiente de pago.' })
+      } else if (status === 404) {
+        setMensaje({ tipo: 'error', texto: 'La reserva no existe.' })
+      } else {
+        setMensaje({ tipo: 'error', texto: 'No se pudo iniciar el pago. Probá de nuevo.' })
+      }
+      setPagandoId(null)
     }
   }
 
@@ -105,6 +128,15 @@ export default function MisReservasPage() {
                   ${Number(reserva.precioPagado).toFixed(2)}
                 </div>
                 <Badge value={reserva.estado} />
+                {reserva.estado === 'PENDIENTE_PAGO' && (
+                  <button
+                    onClick={() => handlePagar(reserva.id)}
+                    disabled={pagandoId === reserva.id}
+                    className="btn-primary !px-4 !py-2 text-sm"
+                  >
+                    {pagandoId === reserva.id ? 'Redirigiendo...' : 'Pagar'}
+                  </button>
+                )}
                 {reserva.estado !== 'CANCELADA' && (
                   <button
                     onClick={() => handleCancelar(reserva.id)}

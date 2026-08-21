@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VuelosPage from './pages/VuelosPage'
 import MisReservasPage from './pages/MisReservasPage'
+import PagoExitoPage from './pages/PagoExitoPage'
+import PagoCanceladoPage from './pages/PagoCanceladoPage'
 import PerfilPage from './pages/PerfilPage'
 import AdminLayout from './layouts/AdminLayout'
 import DashboardPage from './pages/admin/DashboardPage'
@@ -29,6 +31,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <MisReservasPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pago/exito"
+            element={
+              <ProtectedRoute>
+                <PagoExitoPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pago/cancelado"
+            element={
+              <ProtectedRoute>
+                <PagoCanceladoPage />
               </ProtectedRoute>
             }
           />
