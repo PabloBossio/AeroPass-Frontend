@@ -10,8 +10,11 @@ export function obtenerMiPerfil() {
   return apiClient.get('/api/usuarios/me').then((res) => res.data)
 }
 
-export function listarUsuarios() {
-  return apiClient.get('/api/usuarios').then((res) => res.data)
+// El backend ahora pagina GET /api/usuarios (?page, ?size, ?sort). La
+// respuesta ya no es un array plano sino
+// { contenido, paginaActual, tamanoPagina, totalElementos, totalPaginas, esUltima }.
+export function listarUsuarios({ page = 0, size = 10 } = {}) {
+  return apiClient.get('/api/usuarios', { params: { page, size } }).then((res) => res.data)
 }
 
 export function buscarUsuarioPorId(id) {

@@ -9,15 +9,21 @@ function formatearFecha(fechaIso) {
 
 export default function ReservasAdminPage() {
   const [reservas, setReservas] = useState([])
+  const [paginaActual, setPaginaActual] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(0)
+  const [esUltima, setEsUltima] = useState(true)
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState(null)
   const [cancelandoId, setCancelandoId] = useState(null)
 
-  async function cargarReservas() {
+  async function cargarReservas(pagina = 0) {
     setCargando(true)
     try {
-      const data = await listarTodasLasReservas()
-      setReservas(data)
+      const data = await listarTodasLasReservas({ page: pagina })
+      setReservas(data.contenido)
+      setPaginaActual(data.paginaActual)
+      setTotalPaginas(data.totalPaginas)
+      setEsUltima(data.esUltima)
     } catch {
       setMensaje({ tipo: 'error', texto: 'No se pudieron cargar las reservas.' })
     } finally {
@@ -26,8 +32,16 @@ export default function ReservasAdminPage() {
   }
 
   useEffect(() => {
-    cargarReservas()
+    cargarReservas(0)
   }, [])
+
+  function handlePaginaAnterior() {
+    if (paginaActual > 0) cargarReservas(paginaActual - 1)
+  }
+
+  function handlePaginaSiguiente() {
+    if (!esUltima) cargarReservas(paginaActual + 1)
+  }
 
   async function handleCancelar(id) {
     setMensaje(null)
@@ -35,7 +49,7 @@ export default function ReservasAdminPage() {
     try {
       await cancelarReserva(id)
       setMensaje({ tipo: 'exito', texto: 'Reserva cancelada correctamente.' })
-      cargarReservas()
+      cargarReservas(paginaActual)
     } catch (err) {
       const texto =
         err.response?.status === 400
@@ -103,6 +117,28 @@ export default function ReservasAdminPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {!cargando && totalPaginas > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <button
+            onClick={handlePaginaAnterior}
+            disabled={paginaActual === 0}
+            className="btn-outline !px-4 !py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Anterior
+          </button>
+          <span className="text-sm text-slate-400">
+            Página {paginaActual + 1} de {totalPaginas}
+          </span>
+          <button
+            onClick={handlePaginaSiguiente}
+            disabled={esUltima}
+            className="btn-outline !px-4 !py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Siguiente
+          </button>
         </div>
       )}
     </div>

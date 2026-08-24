@@ -8,16 +8,22 @@ import { UserIcon } from '../../components/icons'
 export default function UsuariosAdminPage() {
   const { user } = useAuth()
   const [usuarios, setUsuarios] = useState([])
+  const [paginaActual, setPaginaActual] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(0)
+  const [esUltima, setEsUltima] = useState(true)
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState(null)
   const [usuarioACambiar, setUsuarioACambiar] = useState(null) // { usuario, nuevoRol }
   const [guardando, setGuardando] = useState(false)
 
-  async function cargarUsuarios() {
+  async function cargarUsuarios(pagina = 0) {
     setCargando(true)
     try {
-      const data = await listarUsuarios()
-      setUsuarios(data)
+      const data = await listarUsuarios({ page: pagina })
+      setUsuarios(data.contenido)
+      setPaginaActual(data.paginaActual)
+      setTotalPaginas(data.totalPaginas)
+      setEsUltima(data.esUltima)
     } catch {
       setMensaje({ tipo: 'error', texto: 'No se pudieron cargar los usuarios.' })
     } finally {
@@ -26,8 +32,16 @@ export default function UsuariosAdminPage() {
   }
 
   useEffect(() => {
-    cargarUsuarios()
+    cargarUsuarios(0)
   }, [])
+
+  function handlePaginaAnterior() {
+    if (paginaActual > 0) cargarUsuarios(paginaActual - 1)
+  }
+
+  function handlePaginaSiguiente() {
+    if (!esUltima) cargarUsuarios(paginaActual + 1)
+  }
 
   function pedirCambioDeRol(usuario) {
     const nuevoRol = usuario.rol === 'ADMIN' ? 'USUARIO' : 'ADMIN'
@@ -40,7 +54,7 @@ export default function UsuariosAdminPage() {
       await actualizarRolUsuario(usuarioACambiar.usuario.id, usuarioACambiar.nuevoRol)
       setMensaje({ tipo: 'exito', texto: 'Rol actualizado correctamente.' })
       setUsuarioACambiar(null)
-      cargarUsuarios()
+      cargarUsuarios(paginaActual)
     } catch {
       setMensaje({ tipo: 'error', texto: 'No se pudo actualizar el rol.' })
       setUsuarioACambiar(null)
@@ -96,6 +110,28 @@ export default function UsuariosAdminPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {!cargando && totalPaginas > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <button
+            onClick={handlePaginaAnterior}
+            disabled={paginaActual === 0}
+            className="btn-outline !px-4 !py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Anterior
+          </button>
+          <span className="text-sm text-slate-400">
+            Página {paginaActual + 1} de {totalPaginas}
+          </span>
+          <button
+            onClick={handlePaginaSiguiente}
+            disabled={esUltima}
+            className="btn-outline !px-4 !py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Siguiente
+          </button>
         </div>
       )}
 

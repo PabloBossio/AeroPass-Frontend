@@ -19,6 +19,9 @@ export function cancelarReserva(id) {
 }
 
 // Solo ADMIN: todas las reservas del sistema, de todos los usuarios.
-export function listarTodasLasReservas() {
-  return apiClient.get('/api/reservas').then((res) => res.data)
+// El backend ahora pagina GET /api/reservas (?page, ?size, ?sort). La
+// respuesta ya no es un array plano sino
+// { contenido, paginaActual, tamanoPagina, totalElementos, totalPaginas, esUltima }.
+export function listarTodasLasReservas({ page = 0, size = 10 } = {}) {
+  return apiClient.get('/api/reservas', { params: { page, size } }).then((res) => res.data)
 }

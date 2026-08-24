@@ -14,7 +14,7 @@ const VARIANTES_POR_VALOR = {
   USUARIO: 'badge-slate',
 }
 
-const ETIQUETAS = {
+export const ETIQUETAS = {
   PROGRAMADO: 'Programado',
   EN_VUELO: 'En vuelo',
   FINALIZADO: 'Finalizado',

@@ -5,6 +5,7 @@ import { listarUsuarios } from '../../api/usuarios'
 import { listarTodasLasReservas } from '../../api/reservas'
 import StatCard from '../../components/StatCard'
 import BarList from '../../components/BarList'
+import { ETIQUETAS } from '../../components/Badge'
 import { PlaneIcon, LayersIcon, UsersIcon, ClipboardIcon } from '../../components/icons'
 
 const COLOR_ESTADO_VUELO = {
@@ -16,17 +17,21 @@ const COLOR_ESTADO_VUELO = {
 }
 
 const COLOR_ESTADO_RESERVA = {
+  PENDIENTE_PAGO: 'bg-amber-500',
   CONFIRMADA: 'bg-green-500',
   CANCELADA: 'bg-red-500',
 }
 
+// Mismas etiquetas legibles que ya usa el Badge en toda la app (Mis
+// reservas, panel admin, etc.), reutilizadas acá para no duplicar el mapeo
+// enum -> texto en un segundo lugar.
 function agruparPorEstado(items, mapaColores) {
   const conteo = {}
   for (const item of items) {
     conteo[item.estado] = (conteo[item.estado] || 0) + 1
   }
   return Object.entries(conteo).map(([estado, value]) => ({
-    label: estado,
+    label: ETIQUETAS[estado] || estado,
     value,
     colorClass: mapaColores[estado],
   }))
@@ -37,17 +42,24 @@ export default function DashboardPage() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    // Mismo criterio que en VuelosAdminPage: GET /api/vuelos pagina, y acá
-    // necesitamos el total para calcular estadísticas agregadas, así que
-    // pedimos una página grande en vez de sumar paginación al dashboard.
+    // Mismo criterio que en VuelosAdminPage: GET /api/vuelos, /api/usuarios y
+    // /api/reservas paginan, y acá necesitamos el total para calcular
+    // estadísticas agregadas (admins por rol, ingresos confirmados, reservas
+    // por estado), así que pedimos una página grande en vez de sumar
+    // paginación al dashboard.
     Promise.all([
       listarVuelos({ size: 1000 }),
       listarAviones(),
-      listarUsuarios(),
-      listarTodasLasReservas(),
+      listarUsuarios({ size: 1000 }),
+      listarTodasLasReservas({ size: 1000 }),
     ])
-      .then(([vuelosData, aviones, usuarios, reservas]) => {
-        setDatos({ vuelos: vuelosData.contenido, aviones, usuarios, reservas })
+      .then(([vuelosData, aviones, usuariosData, reservasData]) => {
+        setDatos({
+          vuelos: vuelosData.contenido,
+          aviones,
+          usuarios: usuariosData.contenido,
+          reservas: reservasData.contenido,
+        })
       })
       .catch(() => setError('No se pudieron cargar las estadísticas.'))
   }, [])
