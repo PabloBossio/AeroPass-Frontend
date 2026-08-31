@@ -1,9 +1,91 @@
 import { useEffect, useState } from 'react'
-import { listarVuelos, crearVuelo, editarVuelo, eliminarVuelo } from '../../api/vuelos'
+import { listarVuelos, crearVuelo, editarVuelo, eliminarVuelo, cambiarEstadoVuelo } from '../../api/vuelos'
 import { listarAviones } from '../../api/aviones'
-import Badge from '../../components/Badge'
+import Badge, { ETIQUETAS } from '../../components/Badge'
 import Modal from '../../components/Modal'
-import { PlusIcon, PencilIcon, TrashIcon } from '../../components/icons'
+import { PlusIcon, PencilIcon, TrashIcon, RefreshIcon } from '../../components/icons'
+
+// Mismo orden que el ciclo de vida real de un vuelo (ver EstadoVuelo en el
+// backend): PROGRAMADO -> EN_VUELO -> FINALIZADO, con DEMORADO/CANCELADO
+// como alternativas en cualquier punto antes de FINALIZADO.
+const ESTADOS_VUELO = ['PROGRAMADO', 'DEMORADO', 'EN_VUELO', 'CANCELADO', 'FINALIZADO']
+
+// DEMORADO y CANCELADO son los dos únicos estados que disparan un email al
+// backend, avisando a todos los usuarios con reservas activas sobre el
+// vuelo — se lo mostramos al admin antes de que confirme, para que sepa que
+// la acción tiene un efecto real más allá de actualizar un campo.
+const ESTADOS_QUE_NOTIFICAN = new Set(['DEMORADO', 'CANCELADO'])
+
+function CambiarEstadoModal({ vuelo, onClose, onCambiado }) {
+  const [nuevoEstado, setNuevoEstado] = useState(vuelo.estado)
+  const [cambiando, setCambiando] = useState(false)
+  const [error, setError] = useState(null)
+
+  const sinCambios = nuevoEstado === vuelo.estado
+
+  async function handleConfirmar() {
+    setError(null)
+    setCambiando(true)
+    try {
+      await cambiarEstadoVuelo(vuelo.id, nuevoEstado)
+      onCambiado(nuevoEstado)
+    } catch {
+      setError('No se pudo cambiar el estado del vuelo.')
+    } finally {
+      setCambiando(false)
+    }
+  }
+
+  return (
+    <Modal titulo="Cambiar estado del vuelo" onClose={onClose}>
+      <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
+        Vuelo <strong>{vuelo.origen} → {vuelo.destino}</strong> — estado actual:{' '}
+        <Badge value={vuelo.estado} />
+      </p>
+
+      <label className="mb-4 flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Nuevo estado</span>
+        <select
+          className="input"
+          value={nuevoEstado}
+          onChange={(e) => setNuevoEstado(e.target.value)}
+        >
+          {ESTADOS_VUELO.map((estado) => (
+            <option key={estado} value={estado}>
+              {ETIQUETAS[estado] || estado}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {ESTADOS_QUE_NOTIFICAN.has(nuevoEstado) && !sinCambios && (
+        <p className="mb-4 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+          Al confirmar, se les va a enviar un email a todos los usuarios con reservas activas
+          sobre este vuelo, avisándoles del cambio.
+        </p>
+      )}
+
+      {error && (
+        <p className="mb-4 rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
+          {error}
+        </p>
+      )}
+
+      <div className="flex gap-3">
+        <button onClick={onClose} className="btn-outline flex-1" disabled={cambiando}>
+          Cancelar
+        </button>
+        <button
+          onClick={handleConfirmar}
+          disabled={cambiando || sinCambios}
+          className="btn-primary flex-1"
+        >
+          {cambiando ? 'Guardando...' : 'Confirmar cambio'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
 
 function formatearFecha(fechaIso) {
   if (!fechaIso) return '-'
@@ -198,6 +280,7 @@ export default function VuelosAdminPage() {
   const [modal, setModal] = useState(null) // null | { mode: 'crear' } | { mode: 'editar', vuelo }
   const [vueloAEliminar, setVueloAEliminar] = useState(null)
   const [eliminando, setEliminando] = useState(false)
+  const [vueloCambiarEstado, setVueloCambiarEstado] = useState(null)
 
   async function cargarTodo() {
     setCargando(true)
@@ -228,6 +311,12 @@ export default function VuelosAdminPage() {
   function handleGuardado() {
     setModal(null)
     setMensaje({ tipo: 'exito', texto: 'Vuelo guardado correctamente.' })
+    cargarTodo()
+  }
+
+  function handleEstadoCambiado() {
+    setVueloCambiarEstado(null)
+    setMensaje({ tipo: 'exito', texto: 'Estado del vuelo actualizado correctamente.' })
     cargarTodo()
   }
 
@@ -301,6 +390,13 @@ export default function VuelosAdminPage() {
                   ${Number(vuelo.precio).toFixed(2)}
                 </span>
                 <button
+                  onClick={() => setVueloCambiarEstado(vuelo)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"
+                  title="Cambiar estado"
+                >
+                  <RefreshIcon />
+                </button>
+                <button
                   onClick={() => setModal({ mode: 'editar', vuelo })}
                   className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"
                   title="Editar"
@@ -326,6 +422,14 @@ export default function VuelosAdminPage() {
           aviones={aviones}
           onClose={() => setModal(null)}
           onGuardado={handleGuardado}
+        />
+      )}
+
+      {vueloCambiarEstado && (
+        <CambiarEstadoModal
+          vuelo={vueloCambiarEstado}
+          onClose={() => setVueloCambiarEstado(null)}
+          onCambiado={handleEstadoCambiado}
         />
       )}
 

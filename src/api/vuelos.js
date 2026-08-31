@@ -25,3 +25,10 @@ export function editarVuelo(id, vuelo) {
 export function eliminarVuelo(id) {
   return apiClient.delete(`/api/vuelos/${id}`).then((res) => res.data)
 }
+
+// Endpoint dedicado para el cambio de estado (distinto de editarVuelo, que
+// no toca ese campo). Si el nuevo estado es DEMORADO o CANCELADO, el backend
+// notifica por email a los usuarios con reservas activas sobre ese vuelo.
+export function cambiarEstadoVuelo(id, estado) {
+  return apiClient.put(`/api/vuelos/${id}/estado`, { estado }).then((res) => res.data)
+}
