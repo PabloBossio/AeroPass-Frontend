@@ -13,13 +13,15 @@ function formatearFecha(fechaIso) {
   })
 }
 
+// Acá NO van CANCELADO ni FINALIZADO: esta pantalla es para reservar, y esos
+// dos estados ya vienen excluidos directamente por el backend (soloReservables=true
+// más abajo) — ofrecerlos como filtro solo confundiría, porque combinados con
+// ese flag siempre devolverían una lista vacía.
 const OPCIONES_ESTADO = [
   { value: '', label: 'Todos los estados' },
   { value: 'PROGRAMADO', label: 'Programado' },
   { value: 'EN_VUELO', label: 'En vuelo' },
   { value: 'DEMORADO', label: 'Demorado' },
-  { value: 'FINALIZADO', label: 'Finalizado' },
-  { value: 'CANCELADO', label: 'Cancelado' },
 ]
 
 export default function VuelosPage() {
@@ -49,6 +51,9 @@ export default function VuelosPage() {
         origen: filtros.origen || undefined,
         destino: filtros.destino || undefined,
         estado: filtros.estado || undefined,
+        // Esta es la pantalla de búsqueda para reservar: nunca debería
+        // mostrar (ni permitir seleccionar) un vuelo CANCELADO o FINALIZADO.
+        soloReservables: true,
       })
       setVuelos(data.contenido)
       setPaginaActual(data.paginaActual)

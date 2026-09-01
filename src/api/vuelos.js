@@ -4,9 +4,22 @@ import apiClient from './client'
 // ?origen, ?destino, ?estado). La respuesta ya no es un array plano sino
 // { contenido, paginaActual, tamanoPagina, totalElementos, totalPaginas, esUltima }.
 // Los filtros que queden en `undefined` no se mandan (axios los omite solos).
-export function listarVuelos({ page = 0, size = 10, sort = 'fechaSalida', origen, destino, estado } = {}) {
+//
+// `soloReservables` es nuevo: cuando es true, el backend excluye CANCELADO y
+// FINALIZADO de la query (no solo del resultado). Default false para no
+// cambiar nada del comportamiento que ya usa el panel admin (que sí necesita
+// ver todos los vuelos, sin importar el estado).
+export function listarVuelos({
+  page = 0,
+  size = 10,
+  sort = 'fechaSalida',
+  origen,
+  destino,
+  estado,
+  soloReservables = false,
+} = {}) {
   return apiClient
-    .get('/api/vuelos', { params: { page, size, sort, origen, destino, estado } })
+    .get('/api/vuelos', { params: { page, size, sort, origen, destino, estado, soloReservables } })
     .then((res) => res.data)
 }
 
